@@ -25,39 +25,7 @@ from functools import reduce
 from ctypes import c_int, c_char_p, c_uint32
 from watchdog.utils import UnsupportedLibc
 
-
-def _load_libc():
-    libc_path = None
-    try:
-        libc_path = ctypes.util.find_library('c')
-    except (OSError, RuntimeError):
-        # Note: find_library will on some platforms raise these undocumented
-        # errors, e.g.on android OSError "No usable temporary directory found"
-        # will be raised.
-        pass
-
-    if libc_path is not None:
-        return ctypes.CDLL(libc_path)
-
-    # Fallbacks
-    try:
-        return ctypes.CDLL('libc.so')
-    except OSError:
-        pass
-
-    try:
-        return ctypes.CDLL('libc.so.6')
-    except OSError:
-        pass
-
-    # uClibc
-    try:
-        return ctypes.CDLL('libc.so.0')
-    except OSError as err:
-        raise err
-
-
-libc = _load_libc()
+libc = ctypes.CDLL(None)
 
 if not hasattr(libc, 'inotify_init') or \
         not hasattr(libc, 'inotify_add_watch') or \
@@ -139,6 +107,7 @@ WATCHDOG_ALL_EVENTS = reduce(
         InotifyConstants.IN_DELETE,
         InotifyConstants.IN_DELETE_SELF,
         InotifyConstants.IN_DONT_FOLLOW,
+        InotifyConstants.IN_CLOSE_WRITE,
     ])
 
 
@@ -274,7 +243,12 @@ class Inotify:
             if self._path in self._wd_for_path:
                 wd = self._wd_for_path[self._path]
                 inotify_rm_watch(self._inotify_fd, wd)
-            os.close(self._inotify_fd)
+
+            try:
+                os.close(self._inotify_fd)
+            except OSError:
+                # descriptor may be invalid because file was deleted
+                pass
 
     def read_events(self, event_buffer_size=DEFAULT_EVENT_BUFFER_SIZE):
         """
@@ -312,6 +286,8 @@ class Inotify:
             except OSError as e:
                 if e.errno == errno.EINTR:
                     continue
+                else:
+                    raise
             break
 
         with self._lock:

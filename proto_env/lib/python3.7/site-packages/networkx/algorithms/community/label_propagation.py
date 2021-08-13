@@ -1,7 +1,7 @@
 """
 Label propagation community detection algorithms.
 """
-from collections import Counter
+from collections import Counter, defaultdict
 
 import networkx as nx
 from networkx.utils import groups
@@ -52,7 +52,7 @@ def asyn_lpa_communities(G, weight=None, seed=None):
         Iterable of communities given as sets of nodes.
 
     Notes
-    ------
+    -----
     Edge weight attributes must be numerical.
 
     References
@@ -109,10 +109,10 @@ def label_propagation_communities(G):
     G : graph
         An undirected NetworkX graph.
 
-    Yields
-    ------
-    communities : generator
-        Yields sets of the nodes in each community.
+    Returns
+    -------
+    communities : iterable
+        A dict_values object that contains a set of nodes for each community.
 
     Raises
     ------
@@ -135,14 +135,16 @@ def label_propagation_communities(G):
             for n in nodes:
                 _update_label(n, labeling, G)
 
-    for label in set(labeling.values()):
-        yield {x for x in labeling if labeling[x] == label}
+    clusters = defaultdict(set)
+    for node, label in labeling.items():
+        clusters[label].add(node)
+    return clusters.values()
 
 
 def _color_network(G):
     """Colors the network so that neighboring nodes all have distinct colors.
 
-       Returns a dict keyed by color to a set of nodes with that color.
+    Returns a dict keyed by color to a set of nodes with that color.
     """
     coloring = dict()  # color => set(node)
     colors = nx.coloring.greedy_color(G)
@@ -157,10 +159,10 @@ def _color_network(G):
 def _labeling_complete(labeling, G):
     """Determines whether or not LPA is done.
 
-       Label propagation is complete when all nodes have a label that is
-       in the set of highest frequency labels amongst its neighbors.
+    Label propagation is complete when all nodes have a label that is
+    in the set of highest frequency labels amongst its neighbors.
 
-       Nodes with no neighbors are considered complete.
+    Nodes with no neighbors are considered complete.
     """
     return all(
         labeling[v] in _most_frequent_labels(v, labeling, G) for v in G if len(G[v]) > 0
@@ -170,7 +172,7 @@ def _labeling_complete(labeling, G):
 def _most_frequent_labels(node, labeling, G):
     """Returns a set of all labels with maximum frequency in `labeling`.
 
-       Input `labeling` should be a dict keyed by node to labels.
+    Input `labeling` should be a dict keyed by node to labels.
     """
     if not G[node]:
         # Nodes with no neighbors are themselves a community and are labeled
@@ -186,8 +188,8 @@ def _most_frequent_labels(node, labeling, G):
 def _update_label(node, labeling, G):
     """Updates the label of a node using the Prec-Max tie breaking algorithm
 
-       The algorithm is explained in: 'Community Detection via Semi-Synchronous
-       Label Propagation Algorithms' Cordasco and Gargano, 2011
+    The algorithm is explained in: 'Community Detection via Semi-Synchronous
+    Label Propagation Algorithms' Cordasco and Gargano, 2011
     """
     high_labels = _most_frequent_labels(node, labeling, G)
     if len(high_labels) == 1:

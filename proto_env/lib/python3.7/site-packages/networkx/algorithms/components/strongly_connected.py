@@ -121,7 +121,7 @@ def kosaraju_strongly_connected_components(G, source=None):
     Returns
     -------
     comp : generator of sets
-        A genrator of sets of nodes, one for each strongly connected
+        A generator of sets of nodes, one for each strongly connected
         component of G.
 
     Raises
@@ -166,8 +166,8 @@ def kosaraju_strongly_connected_components(G, source=None):
             continue
         c = nx.dfs_preorder_nodes(G, r)
         new = {v for v in c if v not in seen}
-        yield new
         seen.update(new)
+        yield new
 
 
 @not_implemented_for("undirected")

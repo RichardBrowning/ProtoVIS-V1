@@ -34,7 +34,7 @@ def _node_value(G, node_attr):
         def value(u):
             return u
 
-    elif not hasattr(node_attr, "__call__"):
+    elif not callable(node_attr):
         # assume it is a key for the node attribute dictionary
         def value(u):
             return G.nodes[u][node_attr]
@@ -94,7 +94,7 @@ def _edge_value(G, edge_attr):
             def value(u, v):
                 return 1
 
-    elif not hasattr(edge_attr, "__call__"):
+    elif not callable(edge_attr):
         # assume it is a key for the edge attribute dictionary
 
         if edge_attr == "weight":
@@ -267,10 +267,7 @@ def attr_matrix(
         (blue, blue) is 0   # there are no edges with blue endpoints
 
     """
-    try:
-        import numpy as np
-    except ImportError as e:
-        raise ImportError("attr_matrix() requires numpy: http://scipy.org/ ") from e
+    import numpy as np
 
     edge_value = _edge_value(G, edge_attr)
     node_value = _node_value(G, node_attr)
@@ -428,13 +425,9 @@ def attr_sparse_matrix(
         (blue, blue) is 0   # there are no edges with blue endpoints
 
     """
-    try:
-        import numpy as np
-        from scipy import sparse
-    except ImportError as e:
-        raise ImportError(
-            "attr_sparse_matrix() requires scipy: " "http://scipy.org/ "
-        ) from e
+    import numpy as np
+    import scipy as sp
+    import scipy.sparse  # call as sp.sparse
 
     edge_value = _edge_value(G, edge_attr)
     node_value = _node_value(G, node_attr)
@@ -447,7 +440,7 @@ def attr_sparse_matrix(
     N = len(ordering)
     undirected = not G.is_directed()
     index = dict(zip(ordering, range(N)))
-    M = sparse.lil_matrix((N, N), dtype=dtype)
+    M = sp.sparse.lil_matrix((N, N), dtype=dtype)
 
     seen = set()
     for u, nbrdict in G.adjacency():

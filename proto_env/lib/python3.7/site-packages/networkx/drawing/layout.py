@@ -132,7 +132,7 @@ def circular_layout(G, scale=1, center=None, dim=2):
         A dictionary of positions keyed by node
 
     Raises
-    -------
+    ------
     ValueError
         If dim < 2
 
@@ -205,7 +205,7 @@ def shell_layout(G, nlist=None, rotate=None, scale=1, center=None, dim=2):
         A dictionary of positions keyed by node
 
     Raises
-    -------
+    ------
     ValueError
         If dim != 2
 
@@ -310,6 +310,10 @@ def bipartite_layout(
 
     import numpy as np
 
+    if align not in ("vertical", "horizontal"):
+        msg = "align must be either vertical or horizontal."
+        raise ValueError(msg)
+
     G, center = _process_params(G, center=center, dim=2)
     if len(G) == 0:
         return {}
@@ -322,40 +326,24 @@ def bipartite_layout(
     bottom = set(G) - top
     nodes = list(top) + list(bottom)
 
-    if align == "vertical":
-        left_xs = np.repeat(0, len(top))
-        right_xs = np.repeat(width, len(bottom))
-        left_ys = np.linspace(0, height, len(top))
-        right_ys = np.linspace(0, height, len(bottom))
+    left_xs = np.repeat(0, len(top))
+    right_xs = np.repeat(width, len(bottom))
+    left_ys = np.linspace(0, height, len(top))
+    right_ys = np.linspace(0, height, len(bottom))
 
-        top_pos = np.column_stack([left_xs, left_ys]) - offset
-        bottom_pos = np.column_stack([right_xs, right_ys]) - offset
+    top_pos = np.column_stack([left_xs, left_ys]) - offset
+    bottom_pos = np.column_stack([right_xs, right_ys]) - offset
 
-        pos = np.concatenate([top_pos, bottom_pos])
-        pos = rescale_layout(pos, scale=scale) + center
-        pos = dict(zip(nodes, pos))
-        return pos
-
+    pos = np.concatenate([top_pos, bottom_pos])
+    pos = rescale_layout(pos, scale=scale) + center
     if align == "horizontal":
-        top_ys = np.repeat(height, len(top))
-        bottom_ys = np.repeat(0, len(bottom))
-        top_xs = np.linspace(0, width, len(top))
-        bottom_xs = np.linspace(0, width, len(bottom))
-
-        top_pos = np.column_stack([top_xs, top_ys]) - offset
-        bottom_pos = np.column_stack([bottom_xs, bottom_ys]) - offset
-
-        pos = np.concatenate([top_pos, bottom_pos])
-        pos = rescale_layout(pos, scale=scale) + center
-        pos = dict(zip(nodes, pos))
-        return pos
-
-    msg = "align must be either vertical or horizontal."
-    raise ValueError(msg)
+        pos = np.flip(pos, 1)
+    pos = dict(zip(nodes, pos))
+    return pos
 
 
 @random_state(10)
-def fruchterman_reingold_layout(
+def spring_layout(
     G,
     k=None,
     pos=None,
@@ -402,6 +390,7 @@ def fruchterman_reingold_layout(
 
     fixed : list or None  optional (default=None)
         Nodes to keep fixed at initial position.
+        Nodes not in ``G.nodes`` are ignored.
         ValueError raised if `fixed` specified and `pos` not.
 
     iterations : int  optional (default=50)
@@ -413,7 +402,8 @@ def fruchterman_reingold_layout(
 
     weight : string or None   optional (default='weight')
         The edge attribute that holds the numerical value used for
-        the edge weight.  If None, then all edge weights are 1.
+        the edge weight.  Larger means a stronger attractive force.
+        If None, then all edge weights are 1.
 
     scale : number or None (default: 1)
         Scale factor for positions. Not used unless `fixed is None`.
@@ -458,7 +448,7 @@ def fruchterman_reingold_layout(
             if node not in pos:
                 raise ValueError("nodes are fixed without positions given")
         nfixed = {node: i for i, node in enumerate(G)}
-        fixed = np.asarray([nfixed[node] for node in fixed])
+        fixed = np.asarray([nfixed[node] for node in fixed if node in nfixed])
 
     if pos is not None:
         # Determine size of existing domain to adjust initial positions
@@ -506,7 +496,7 @@ def fruchterman_reingold_layout(
     return pos
 
 
-spring_layout = fruchterman_reingold_layout
+fruchterman_reingold_layout = spring_layout
 
 
 @random_state(7)
@@ -580,22 +570,19 @@ def _sparse_fruchterman_reingold(
     # Entry point for NetworkX graph is fruchterman_reingold_layout()
     # Sparse version
     import numpy as np
+    import scipy as sp
+    import scipy.sparse  # call as sp.sparse
 
     try:
         nnodes, _ = A.shape
     except AttributeError as e:
         msg = "fruchterman_reingold() takes an adjacency matrix as input"
         raise nx.NetworkXError(msg) from e
-    try:
-        from scipy.sparse import coo_matrix
-    except ImportError as e:
-        msg = "_sparse_fruchterman_reingold() scipy numpy: http://scipy.org/ "
-        raise ImportError(msg) from e
     # make sure we have a LIst of Lists representation
     try:
         A = A.tolil()
     except AttributeError:
-        A = (coo_matrix(A)).tolil()
+        A = (sp.sparse.coo_matrix(A)).tolil()
 
     if pos is None:
         # random initial positions
@@ -733,12 +720,13 @@ def _kamada_kawai_solve(dist_mtx, pos_arr, dim):
     # and starting locations.
 
     import numpy as np
-    from scipy.optimize import minimize
+    import scipy as sp
+    import scipy.optimize  # call as sp.optimize
 
     meanwt = 1e-3
     costargs = (np, 1 / (dist_mtx + np.eye(dist_mtx.shape[0]) * 1e-3), meanwt, dim)
 
-    optresult = minimize(
+    optresult = sp.optimize.minimize(
         _kamada_kawai_costfn,
         pos_arr.ravel(),
         method="L-BFGS-B",
@@ -879,8 +867,9 @@ def _sparse_spectral(A, dim=2):
     # Uses sparse eigenvalue solver from scipy
     # Could use multilevel methods here, see Koren "On spectral graph drawing"
     import numpy as np
-    from scipy.sparse import spdiags
-    from scipy.sparse.linalg.eigen import eigsh
+    import scipy as sp
+    import scipy.sparse  # call as sp.sparse
+    import scipy.sparse.linalg  # call as sp.sparse.linalg
 
     try:
         nnodes, _ = A.shape
@@ -890,14 +879,14 @@ def _sparse_spectral(A, dim=2):
 
     # form Laplacian matrix
     data = np.asarray(A.sum(axis=1).T)
-    D = spdiags(data, 0, nnodes, nnodes)
+    D = sp.sparse.spdiags(data, 0, nnodes, nnodes)
     L = D - A
 
     k = dim + 1
     # number of Lanczos vectors for ARPACK solver.What is the right scaling?
     ncv = max(2 * k + 1, int(np.sqrt(nnodes)))
     # return smallest k eigenvalues and eigenvectors
-    eigenvalues, eigenvectors = eigsh(L, k, which="SM", ncv=ncv)
+    eigenvalues, eigenvectors = sp.sparse.linalg.eigen.eigsh(L, k, which="SM", ncv=ncv)
     index = np.argsort(eigenvalues)[1:k]  # 0 index is zero eigenvalue
     return np.real(eigenvectors[:, index])
 
@@ -978,12 +967,14 @@ def spiral_layout(G, scale=1, center=None, dim=2, resolution=0.35, equidistant=F
         Lower values result in more compressed spiral layouts.
     equidistant : bool
         If True, nodes will be plotted equidistant from each other.
+
     Returns
     -------
     pos : dict
         A dictionary of positions keyed by node
+
     Raises
-    -------
+    ------
     ValueError
         If dim != 2
 
@@ -1080,6 +1071,10 @@ def multipartite_layout(G, subset_key="subset", align="vertical", scale=1, cente
     """
     import numpy as np
 
+    if align not in ("vertical", "horizontal"):
+        msg = "align must be either vertical or horizontal."
+        raise ValueError(msg)
+
     G, center = _process_params(G, center=center, dim=2)
     if len(G) == 0:
         return {}
@@ -1095,42 +1090,24 @@ def multipartite_layout(G, subset_key="subset", align="vertical", scale=1, cente
 
     pos = None
     nodes = []
-    if align == "vertical":
-        width = len(layers)
-        for i, layer in layers.items():
-            height = len(layer)
-            xs = np.repeat(i, height)
-            ys = np.arange(0, height, dtype=float)
-            offset = ((width - 1) / 2, (height - 1) / 2)
-            layer_pos = np.column_stack([xs, ys]) - offset
-            if pos is None:
-                pos = layer_pos
-            else:
-                pos = np.concatenate([pos, layer_pos])
-            nodes.extend(layer)
-        pos = rescale_layout(pos, scale=scale) + center
-        pos = dict(zip(nodes, pos))
-        return pos
 
+    width = len(layers)
+    for i, layer in layers.items():
+        height = len(layer)
+        xs = np.repeat(i, height)
+        ys = np.arange(0, height, dtype=float)
+        offset = ((width - 1) / 2, (height - 1) / 2)
+        layer_pos = np.column_stack([xs, ys]) - offset
+        if pos is None:
+            pos = layer_pos
+        else:
+            pos = np.concatenate([pos, layer_pos])
+        nodes.extend(layer)
+    pos = rescale_layout(pos, scale=scale) + center
     if align == "horizontal":
-        height = len(layers)
-        for i, layer in layers.items():
-            width = len(layer)
-            xs = np.arange(0, width, dtype=float)
-            ys = np.repeat(i, width)
-            offset = ((width - 1) / 2, (height - 1) / 2)
-            layer_pos = np.column_stack([xs, ys]) - offset
-            if pos is None:
-                pos = layer_pos
-            else:
-                pos = np.concatenate([pos, layer_pos])
-            nodes.extend(layer)
-        pos = rescale_layout(pos, scale=scale) + center
-        pos = dict(zip(nodes, pos))
-        return pos
-
-    msg = "align must be either vertical or horizontal."
-    raise ValueError(msg)
+        pos = np.flip(pos, 1)
+    pos = dict(zip(nodes, pos))
+    return pos
 
 
 def rescale_layout(pos, scale=1):

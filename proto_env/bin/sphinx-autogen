@@ -1,4 +1,4 @@
-#!/home/pi/Desktop/ProtoVIS-V1/proto_env/bin/python
+#!/home/pi/Desktop/ProtoVIS-V1/proto_env/bin/python3
 # -*- coding: utf-8 -*-
 import re
 import sys

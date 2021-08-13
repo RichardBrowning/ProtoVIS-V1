@@ -39,6 +39,13 @@ def non_randomness(G, k=None):
         Non-randomness, Relative non-randomness w.r.t.
         Erdos Renyi random graphs.
 
+    Raises
+    ------
+    NetworkXException
+        if the input graph is not connected.
+    NetworkXError
+        if the input graph contains self-loops.
+
     Examples
     --------
     >>> G = nx.karate_club_graph()
@@ -50,10 +57,11 @@ def non_randomness(G, k=None):
 
     References
     ----------
-     .. [1] Xiaowei Ying and Xintao Wu,
-            On Randomness Measures for Social Networks,
-            SIAM International Conference on Data Mining. 2009
+    .. [1] Xiaowei Ying and Xintao Wu,
+           On Randomness Measures for Social Networks,
+           SIAM International Conference on Data Mining. 2009
     """
+    import numpy as np
 
     if not nx.is_connected(G):
         raise nx.NetworkXException("Non connected graph.")
@@ -62,12 +70,6 @@ def non_randomness(G, k=None):
 
     if k is None:
         k = len(tuple(nx.community.label_propagation_communities(G)))
-
-    try:
-        import numpy as np
-    except ImportError as e:
-        msg = "non_randomness requires NumPy: http://numpy.org/"
-        raise ImportError(msg) from e
 
     # eq. 4.4
     nr = np.real(np.sum(np.linalg.eigvals(nx.to_numpy_array(G))[:k]))

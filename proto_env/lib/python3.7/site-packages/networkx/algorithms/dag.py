@@ -8,18 +8,11 @@ to the user to check for that.
 from collections import deque
 from math import gcd
 from functools import partial
-from itertools import chain
-from itertools import product
-from itertools import starmap
+from itertools import chain, product, starmap
 import heapq
 
 import networkx as nx
-from networkx.algorithms.traversal.breadth_first_search import descendants_at_distance
-from networkx.generators.trees import NIL
-from networkx.utils import arbitrary_element
-from networkx.utils import consume
-from networkx.utils import pairwise
-from networkx.utils import not_implemented_for
+from networkx.utils import arbitrary_element, pairwise, not_implemented_for
 
 __all__ = [
     "descendants",
@@ -27,6 +20,7 @@ __all__ = [
     "topological_sort",
     "lexicographical_topological_sort",
     "all_topological_sorts",
+    "topological_generations",
     "is_directed_acyclic_graph",
     "is_aperiodic",
     "transitive_closure",
@@ -47,7 +41,7 @@ def descendants(G, source):
     Parameters
     ----------
     G : NetworkX DiGraph
-        A directed acyclic graph (DAG)
+        A directed graph
     source : node in `G`
 
     Returns
@@ -67,7 +61,7 @@ def ancestors(G, source):
     Parameters
     ----------
     G : NetworkX DiGraph
-        A directed acyclic graph (DAG)
+        A directed graph
     source : node in `G`
 
     Returns
@@ -84,7 +78,8 @@ def ancestors(G, source):
 def has_cycle(G):
     """Decides whether the directed graph has a cycle."""
     try:
-        consume(topological_sort(G))
+        # Feed the entire iterator into a zero-length deque.
+        deque(topological_sort(G), maxlen=0)
     except nx.NetworkXUnfeasible:
         return True
     else:
@@ -107,22 +102,100 @@ def is_directed_acyclic_graph(G):
     return G.is_directed() and not has_cycle(G)
 
 
-def topological_sort(G):
-    """Returns a generator of nodes in topologically sorted order.
+def topological_generations(G):
+    """Stratifies a DAG into generations.
 
-    A topological sort is a nonunique permutation of the nodes such that an
-    edge from u to v implies that u appears before v in the topological sort
-    order.
+    A topological generation is node collection in which ancestors of a node in each
+    generation are guaranteed to be in a previous generation, and any descendants of
+    a node are guaranteed to be in a following generation. Nodes are guaranteed to
+    be in the earliest possible generation that they can belong to.
 
     Parameters
     ----------
     G : NetworkX digraph
         A directed acyclic graph (DAG)
 
-    Returns
-    -------
-    iterable
-        An iterable of node names in topological sorted order.
+    Yields
+    ------
+    sets of nodes
+        Yields sets of nodes representing each generation.
+
+    Raises
+    ------
+    NetworkXError
+        Generations are defined for directed graphs only. If the graph
+        `G` is undirected, a :exc:`NetworkXError` is raised.
+
+    NetworkXUnfeasible
+        If `G` is not a directed acyclic graph (DAG) no topological generations
+        exist and a :exc:`NetworkXUnfeasible` exception is raised.  This can also
+        be raised if `G` is changed while the returned iterator is being processed
+
+    RuntimeError
+        If `G` is changed while the returned iterator is being processed.
+
+    Examples
+    --------
+    >>> DG = nx.DiGraph([(2, 1), (3, 1)])
+    >>> [sorted(generation) for generation in nx.topological_generations(DG)]
+    [[2, 3], [1]]
+
+    Notes
+    -----
+    The generation in which a node resides can also be determined by taking the
+    max-path-distance from the node to the farthest leaf node. That value can
+    be obtained with this function using `enumerate(topological_generations(G))`.
+
+    See also
+    --------
+    topological_sort
+    """
+    if not G.is_directed():
+        raise nx.NetworkXError("Topological sort not defined on undirected graphs.")
+
+    multigraph = G.is_multigraph()
+    indegree_map = {v: d for v, d in G.in_degree() if d > 0}
+    zero_indegree = [v for v, d in G.in_degree() if d == 0]
+
+    while zero_indegree:
+        this_generation = zero_indegree
+        zero_indegree = []
+        for node in this_generation:
+            if node not in G:
+                raise RuntimeError("Graph changed during iteration")
+            for child in G.neighbors(node):
+                try:
+                    indegree_map[child] -= len(G[node][child]) if multigraph else 1
+                except KeyError as e:
+                    raise RuntimeError("Graph changed during iteration") from e
+                if indegree_map[child] == 0:
+                    zero_indegree.append(child)
+                    del indegree_map[child]
+        yield this_generation
+
+    if indegree_map:
+        raise nx.NetworkXUnfeasible(
+            "Graph contains a cycle or graph changed during iteration"
+        )
+
+
+def topological_sort(G):
+    """Returns a generator of nodes in topologically sorted order.
+
+    A topological sort is a nonunique permutation of the nodes of a
+    directed graph such that an edge from u to v implies that u
+    appears before v in the topological sort order. This ordering is
+    valid only if the graph has no directed cycles.
+
+    Parameters
+    ----------
+    G : NetworkX digraph
+        A directed acyclic graph (DAG)
+
+    Yields
+    ------
+    nodes
+        Yields the nodes in topological sorted order.
 
     Raises
     ------
@@ -170,32 +243,8 @@ def topological_sort(G):
     .. [1] Manber, U. (1989).
        *Introduction to Algorithms - A Creative Approach.* Addison-Wesley.
     """
-    if not G.is_directed():
-        raise nx.NetworkXError("Topological sort not defined on undirected graphs.")
-
-    indegree_map = {v: d for v, d in G.in_degree() if d > 0}
-    # These nodes have zero indegree and ready to be returned.
-    zero_indegree = [v for v, d in G.in_degree() if d == 0]
-
-    while zero_indegree:
-        node = zero_indegree.pop()
-        if node not in G:
-            raise RuntimeError("Graph changed during iteration")
-        for _, child in G.edges(node):
-            try:
-                indegree_map[child] -= 1
-            except KeyError as e:
-                raise RuntimeError("Graph changed during iteration") from e
-            if indegree_map[child] == 0:
-                zero_indegree.append(child)
-                del indegree_map[child]
-
-        yield node
-
-    if indegree_map:
-        raise nx.NetworkXUnfeasible(
-            "Graph contains a cycle or graph changed " "during iteration"
-        )
+    for generation in nx.topological_generations(G):
+        yield from generation
 
 
 def lexicographical_topological_sort(G, key=None):
@@ -468,7 +517,7 @@ def is_aperiodic(G):
 
 @not_implemented_for("undirected")
 def transitive_closure(G, reflexive=False):
-    """ Returns transitive closure of a directed graph
+    """Returns transitive closure of a directed graph
 
     The transitive closure of G = (V,E) is a graph G+ = (V,E+) such that
     for all v, w in V there is an edge (v, w) in E+ if and only if there
@@ -530,7 +579,7 @@ def transitive_closure(G, reflexive=False):
 
 @not_implemented_for("undirected")
 def transitive_closure_dag(G, topo_order=None):
-    """ Returns the transitive closure of a directed acyclic graph.
+    """Returns the transitive closure of a directed acyclic graph.
 
     This function is faster than the function `transitive_closure`, but fails
     if the graph has a cycle.
@@ -572,14 +621,14 @@ def transitive_closure_dag(G, topo_order=None):
     # idea: traverse vertices following a reverse topological order, connecting
     # each vertex to its descendants at distance 2 as we go
     for v in reversed(topo_order):
-        TC.add_edges_from((v, u) for u in descendants_at_distance(TC, v, 2))
+        TC.add_edges_from((v, u) for u in nx.descendants_at_distance(TC, v, 2))
 
     return TC
 
 
 @not_implemented_for("undirected")
 def transitive_reduction(G):
-    """ Returns transitive reduction of a directed graph
+    """Returns transitive reduction of a directed graph
 
     The transitive reduction of G = (V,E) is a graph G- = (V,E-) such that
     for all v,w in V there is an edge (v,w) in E- if and only if (v,w) is
@@ -600,6 +649,27 @@ def transitive_reduction(G):
     NetworkXError
         If `G` is not a directed acyclic graph (DAG) transitive reduction is
         not uniquely defined and a :exc:`NetworkXError` exception is raised.
+
+    Examples
+    --------
+    To perform transitive reduction on a DiGraph:
+
+    >>> DG = nx.DiGraph([(1, 2), (2, 3), (1, 3)])
+    >>> TR = nx.transitive_reduction(DG)
+    >>> list(TR.edges)
+    [(1, 2), (2, 3)]
+
+    To avoid unnecessary data copies, this implementation does not return a
+    DiGraph with node/edge data.
+    To perform transitive reduction on a DiGraph and transfer node/edge data:
+
+    >>> DG = nx.DiGraph()
+    >>> DG.add_edges_from([(1, 2), (2, 3), (1, 3)], color='red')
+    >>> TR = nx.transitive_reduction(DG)
+    >>> TR.add_nodes_from(DG.nodes(data=True))
+    >>> TR.add_edges_from((u, v, DG.edges[u, v]) for u, v in TR.edges)
+    >>> list(TR.edges(data=True))
+    [(1, 2, {'color': 'red'}), (2, 3, {'color': 'red'})]
 
     References
     ----------
@@ -899,8 +969,8 @@ def dag_to_branching(G):
         msg = "dag_to_branching is only defined for acyclic graphs"
         raise nx.HasACycle(msg)
     paths = root_to_leaf_paths(G)
-    B, root = nx.prefix_tree(paths)
-    # Remove the synthetic `root` and `NIL` nodes in the prefix tree.
-    B.remove_node(root)
-    B.remove_node(NIL)
+    B = nx.prefix_tree(paths)
+    # Remove the synthetic `root`(0) and `NIL`(-1) nodes from the tree
+    B.remove_node(0)
+    B.remove_node(-1)
     return B

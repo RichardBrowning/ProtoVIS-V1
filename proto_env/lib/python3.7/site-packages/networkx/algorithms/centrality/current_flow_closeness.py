@@ -28,6 +28,8 @@ def current_flow_closeness_centrality(G, weight=None, dtype=float, solver="lu"):
     weight : None or string, optional (default=None)
       If None, all edge weights are considered equal.
       Otherwise holds the name of the edge attribute used as weight.
+      The weight reflects the capacity or the strength of the
+      edge.
 
     dtype: data type (default=float)
       Default data type for internal matrices.
@@ -59,7 +61,7 @@ def current_flow_closeness_centrality(G, weight=None, dtype=float, solver="lu"):
        Centrality Measures Based on Current Flow.
        Proc. 22nd Symp. Theoretical Aspects of Computer Science (STACS '05).
        LNCS 3404, pp. 533-544. Springer-Verlag, 2005.
-       http://algo.uni-konstanz.de/publications/bf-cmbcf-05.pdf
+       https://doi.org/10.1007/978-3-540-31856-9_44
 
     .. [2] Karen Stephenson and Marvin Zelen:
        Rethinking centrality: Methods and examples.
