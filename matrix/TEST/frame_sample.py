@@ -41,14 +41,22 @@ import time
 def frame(width, height, block_orientation, rotate, inreverse):
     #size of LED matrix is 64*24
     # create matrix device
-    serial = spi(port=0, device=0, gpio=noop())
+    serial_r = spi(port=0, device=0, gpio=noop())
+    serial_l = spi(port=0, device=1, gpio=noop())
     #对于非一维排列的matrix, casecade可能是没有用的
-    device = max7219(serial, width = width, height = height, block_orientation=block_orientation,
+    device_l = max7219(serial_l, width = width, height = height, block_orientation=block_orientation,
+                     rotate=rotate or 0, blocks_arranged_in_reverse_order=inreverse)
+    device_r = max7219(serial_r, width = width, height = height, block_orientation=block_orientation,
                      rotate=rotate or 0, blocks_arranged_in_reverse_order=inreverse)
     print("Created device")
-    device.contrast(0)
-    with canvas(device) as draw:
-        draw.rectangle(device.bounding_box, fill = "white", outline="black")
+    device_r.contrast(0)
+    device_l.contrast(0)
+    with canvas(device_r) as draw:
+        draw.rectangle(device_r.bounding_box, fill = "white", outline="black")
+        text(draw, (1, 2), "Hello", fill="white", font = proportional(TINY_FONT))
+        text(draw, (1, 10), "World", fill="white", font = proportional(TINY_FONT))
+    with canvas(device_l) as draw:
+        draw.rectangle(device_l.bounding_box, fill = "white", outline="black")
         text(draw, (1, 2), "Hello", fill="white", font = proportional(TINY_FONT))
         text(draw, (1, 10), "World", fill="white", font = proportional(TINY_FONT))
     time.sleep(10)

@@ -61,21 +61,27 @@ def stop():
 
 def main():
     # Setup for Banggood version of 4 x 8x8 LED Matrix (https://bit.ly/2Gywazb)
-    serial = spi(port=0, device=0, gpio=noop())
+    serial_r = spi(port=0, device=1, gpio=noop())#CE0
+    serial_l = spi(port=0, device=0, gpio=noop())#CE1
     #device = max7219(serial, cascaded=4, block_orientation=-90, blocks_arranged_in_reverse_order=True)
-    device = max7219(serial, width = WIDTH, height = HEIGHT, block_orientation=B_ORIENTATION, blocks_arranged_in_reverse_order=False)
-    device.contrast(0)
-    print("device created")
+    device_r = max7219(serial_r, width = WIDTH, height = HEIGHT, block_orientation=B_ORIENTATION, blocks_arranged_in_reverse_order=False)
+    device_r.contrast(0)
+    print("device_r created")
+    device_l = max7219(serial_l, width = WIDTH, height = HEIGHT, block_orientation=B_ORIENTATION, blocks_arranged_in_reverse_order=False)
+    device_l.contrast(0)
+    print("device_l created")
+    
+    threads = []
+    threads.append(Thread(target=breath, args=(device_r,)))
+    threads.append(Thread(target=breath, args=(device_l,)))
+    threads.append(Thread(target=showtime, args=(device_r,)))
+    threads.append(Thread(target=showtime, args=(device_l,)))
+    threads.append(Thread(target=stop, args=()))
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
 
-    t2 = Thread(target=breath, args=(device,))
-    t1 = Thread(target=showtime, args=(device,))
-    t3 = Thread(target=stop, args=())
-    t1.start()
-    t2.start() 
-    t3.start()
-    t1.join()
-    t2.join()
-    t3.join()
 
 if __name__ == "__main__":
     main()
