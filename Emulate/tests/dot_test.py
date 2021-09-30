@@ -12,11 +12,14 @@ def printInfo():
 def main():
     printInfo()
     #simulate device initialization
-    device = dev.pygame(width=32, height=24, rotate=0, mode='1')
+    try:
+        device = dev.pygame(width=32, height=24, rotate=0, mode='RGB')
         #(32, 24, 0, '1', 'scale2x', 2)
-    with canvas(device) as draw:
-        draw.rectangle(device.bounding_box, outline="white", fill="black")
-    time.sleep(10)
+        with canvas(device) as draw:
+            draw.rectangle(device.bounding_box, outline="white", fill="black")
+        time.sleep(10)
+    except AssertionError:
+        printInfo()
 
 if __name__ == '__main__':
     main()
