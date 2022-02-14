@@ -1,5 +1,5 @@
 {
-    "python.pythonPath": "proto_env/bin/python",
+    "python.pythonPath": "C:\\Users\\mi888\\miniconda3\\python.exe",
     "python.analysis.extraPaths": [
         "./matrix/start",
         "./matrix",
