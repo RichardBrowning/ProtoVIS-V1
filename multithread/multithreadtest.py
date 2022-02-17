@@ -3,50 +3,56 @@
  
 import threading
 import time
-from tkinter import Y
 
 exitFlag = 0
 
-class myThread (threading.Thread):
-   def __init__(self, threadID, name, taskName):
-      threading.Thread.__init__(self)
-      self.threadID = threadID
-      self.name = name
-      self.taskName = taskName
-   def run(self):
-      print("Starting " + self.name)
-      print_time(self.name, self.taskName, 3)
-      print("Exiting " + self.name)
-
 class terThread (threading.Thread):
-   def __init__(self, threadID, name, taskName):
+   def __init__(self, threadID):
       threading.Thread.__init__(self)
       self.threadID = threadID
-      self.name = name
-      self.taskName = taskName
    def run(self):
-      print("Starting " + self.name)
-      #TODO
-      print("Exiting " + self.name)
-
+      print("Starting Driver Program")
+      command(self.threadID)
+      print("Exiting Driver Program")
 # 为线程定义一个函数
-def print_time( threadName, taskName, delay):
+def command(threadID,):
+   global exitFlag
+   #loop
    while True:
-      if exitFlag:
-         (threading.Thread).exit()
+      # if endflag triggered
+      if threadID == exitFlag:
+         #end the task
+         exitFlag = -1
+         break
+      #prompt user for input
+      time.sleep(1)
+      exitFlag = int(input("Input the thread ID of the task to exit: "))
+      #set endFlag
+
+def print_time(threadID, threadName, delay):
+   print("starting " + threadName)
+   global exitFlag
+   while True:
+      if exitFlag == threadID or exitFlag == -1:
+         break
       time.sleep(delay)
-      print("%s === %s: %s" % (taskName, threadName, time.ctime(time.time()) ))
+      #print("%s === %s: %s" % (threadID, threadName, time.ctime(time.time())))
+   print("exiting " + threadName)
 
-# 创建两个线程
-thread1 = myThread(1, "Alpha", "Mic")
-thread2 = myThread(2, "Beta", "Camera")
-thread3 = myThread(3, "Gamma", "Display")
-thread4 = myThread(4, "Theta", "LED_Matrix")
-thread5 = myThread(5, "Omega", "Battery")
-thread6 = terThread()
-threads = {thread1,  thread2, thread3, thread4, thread5}
+def main():
+   # 创建两个线程
+   thread1 = threading.Thread(target = print_time, args=(1, "Mic", 0.5))
+   thread2 = threading.Thread(target = print_time, args=(2, "Camera", 0.5))
+   thread3 = threading.Thread(target = print_time, args=(3, "Display", 0.5))
+   thread4 = threading.Thread(target = print_time, args=(4, "LED_Matrix", 0.5))
+   thread5 = threading.Thread(target = print_time, args=(5, "Battery", 0.5))
+   threadTer = terThread(6)
+   threads = {thread1,  thread2, thread3, thread4, thread5, threadTer}
 
-for thread in threads:
-   thread.start()
+   for thread in threads:
+      thread.start()
 
-print("Exiting Main Thread")
+   print("Exiting Main Thread")
+
+if __name__ == '__main__':
+   main()
