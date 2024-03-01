@@ -1,4 +1,4 @@
-from camera.camera_controller import CameraController
+from camera.Camera import CameraController
 
 def main():
     #print('hello world')
