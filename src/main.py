@@ -1,4 +1,4 @@
-import PVCore
+from PVCore import PVCore
 from exceptions.ExceptionsSet import TerminateException, ResetCoreException
 
 
@@ -6,7 +6,8 @@ def main():
     core = PVCore()
     while True:
         try:
-            core.start()
+            # trap function
+            core.loop()
         except TerminateException:
             # terminate flag reached
             break
@@ -22,7 +23,8 @@ def main():
     camera.add_overlay_text(0, "inspiron") 
     camera.record_video(10)
     time.sleep(30)
-    ''''
+    '''
+    exit(0)
 
 if __name__ == "__main__":
     main()

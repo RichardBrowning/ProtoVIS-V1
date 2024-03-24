@@ -1,11 +1,9 @@
+from config import BUTTONS, MODES
 from module.Module import Module
-# import module.ButtonHandler as ButtonHandler
+# import util.ButtonHandler as ButtonHandler
 from exceptions.ExceptionsSet import TerminateException, ResetCoreException
 import time
 import signal
-
-BUTTONS = {"capture_image": 1, "mode_change": 24, "reset": 28, "power": 29}
-MODES = ["Active", "Monitoring"]
 
 class PVCore(object):
     def __init__(self, ):
@@ -40,9 +38,15 @@ class PVCore(object):
         print("Image captured\n")
     def mode_change(self):
         print("changed mode\n")
+    
+    # for CTRL+C handling
+    def signal_handler(self, signal_received, frame):
+        self.halt()
+    # reset of program
     def resets(self):
         print("Reset\n")
         raise ResetCoreException
+    # halt of program
     def halt(self):
         print("Program Halt\n")
         raise TerminateException

@@ -6,10 +6,10 @@ class Module(object):
         self.str = str
     
     def generateRandom(self):
-        random_number = random.randint(1, self.integer)
+        return random.randint(1, self.integer)
 
     def getText(self):
-        print(f'Module {self.integer} printed: {self.str}')
+        return f'Module {self.integer} printed: {self.str}'
 
     def zeroToInt(self):
         for i in range(self.integer):
