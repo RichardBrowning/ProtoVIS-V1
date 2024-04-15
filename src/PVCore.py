@@ -1,66 +1,94 @@
-from config import BUTTONS, MODES
-from module.Module import Module
-# import util.ButtonHandler as ButtonHandler
-from exceptions.ExceptionsSet import TerminateException, ResetCoreException
+from config import BUTTONS_PINS, RECORD_DUR
+from pyRTOS import Task, Timer
+
 import time
-import signal
+from camera.Camera import Camera
+from utils.I2CController import I2CController
+from utils.ButtonHandler import ButtonHandler
+from exceptions.ExceptionsSet import TerminateException, ResetCoreException
 
 class PVCore(object):
     def __init__(self, ):
         ## picamera2 #
-        ## Speaker #
         ## 4-Buttons set #
         ## OLED display #
         ## TOF sensors #
         ## I2C controller
-        ## LED strip 
-        ## Microphone THIS WILL NOT BE DEVELOPED
-        signal.signal(signal.SIGINT, self.signal_handler)
-        self.FLAG_RUNNING = True
-        self.m1 = Module(10, "interesting")
-        self.m2 = Module(20, "boring")
-        self.button_handlers = []
-        #for name, pin in BUTTONS:
-            #handler = ButtonHandler(pin, None)
-            #self.button_handlers.append(handler)
+        self.mode = 0
+        self.button_handlers = [
+            ButtonHandler(id, pin, self.button_press_callback)
+            for id, pin in BUTTONS_PINS
+        ]
+        self.i2c_controller = I2CController(0x40)
+        # send mode to I2C controller
+        self.i2c_controller.send_byte(self.mode)
+        # start the camera
+        self.picam = Camera()
+        self.picam.start_preview()
 
     def loop(self):
-        while self.FLAG_RUNNING:
-            # get button status
-            # run module's print
-            print(self.m1.generateRandom())
-            print(self.m1.getText())
-            print(self.m2.generateRandom())
-            print(self.m2.getText())
-            time.sleep(0.05)
-            
+        # if in active mode
+        if self.mode == 0:
+            # TODO: read from the matrices, update the OLED display
+            pass
+        # if in passive mode
+        elif self.mode == 1:
+            # Do nothing, for now, TODO: redesign
+            pass
+
+    def button_press_callback(self, button_id, duration):
+        # if duration is less than 2 second, short press process
+        if duration < 2:
+            if button_id == BUTTONS_PINS.keys()[0]:
+                pass
+            elif button_id == BUTTONS_PINS.keys()[1]:
+                # capture image
+                self.capture_image()
+            elif button_id == BUTTONS_PINS.keys()[2]:
+                pass
+            elif button_id == BUTTONS_PINS.keys()[3]:
+                pass
+        else:
+            # if duration is more than 2 second, long press process
+            if button_id == BUTTONS_PINS.keys()[0]:
+                # toggle self mode
+                self.mode_change((self.mode + 1) % 2)
+            elif button_id == BUTTONS_PINS.keys()[1]:
+                self.capture_video()
+            elif button_id == BUTTONS_PINS.keys()[2]:
+                # reset the program
+                self.resets()
+            elif button_id == BUTTONS_PINS.keys()[3]:
+                # halt the program
+                self.halt()
+        
+    def mode_change(self, mode):
+        print("changed mode\n")
+        # try sending mode to I2C controller
+        try:
+            self.i2c_controller.send_byte(mode)
+            self.mode = mode
+        except:
+            print("Failed to send mode to I2C controller\n")
+
     def capture_image(self):
         print("Image captured\n")
-    def mode_change(self):
-        print("changed mode\n")
-    
+        self.picam.capture_image_preview()
+
+    def capture_video(self):
+        print("Video captured\n")
+        self.picam.record_video(RECORD_DUR)
+
     # for CTRL+C handling
     def signal_handler(self, signal_received, frame):
         self.halt()
     # reset of program
     def resets(self):
+        # send reset signal to I2C controller
         print("Reset\n")
         raise ResetCoreException
     # halt of program
     def halt(self):
+        # send halt signal to I2C controller
         print("Program Halt\n")
         raise TerminateException
-
-'''
-if __name__ == "__main__":
-    button_pin = 17  # Example GPIO pin number
-    
-    # Create an instance of ButtonHandler
-    button_handler = ButtonHandler(button_pin, button_pressed_callback)
-    
-    try:
-        # Keep the script running
-        message = input("Press enter to quit\n\n")
-    finally:
-        GPIO.cleanup()  # Clean up at the end of your script
-'''

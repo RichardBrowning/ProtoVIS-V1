@@ -26,6 +26,9 @@ class Camera:
         self.recording_config = self.picam2.create_video_configuration(lores={'size': (int(native_res[0]/2), int(native_res[1]/2)), 'format': 'YUV420'}, main={'size': native_res, 'format': 'XRGB8888'}, transform=Transform(hflip=0, vflip=0))
         self.still_config = self.picam2.create_still_configuration(lores={'size': (int(native_res[0]/2), int(native_res[1]/2)), 'format': 'YUV420'}, main={'size': native_res, 'format': 'XRGB8888'}, transform=Transform(hflip=0, vflip=0))
         
+        self.RECORDING_VIDEO = False
+        self.PREVIEWING = False
+
     def __enter__(self):
         return self
     def __exit__(self):
@@ -43,12 +46,13 @@ class Camera:
     def stop_preview(self):
         self.picam2.stop_preview()
 
-    def capture_image_previewing(self):
+    def capture_image_preview(self):
         # fileName = "capture/images/image" + datetime.datetime.now().ptrftime('%a%d%b%Y,%I:%M%p') + ".jpg"
-        image = self.picam2.switch_mode_and_capture_file(self.still_config, "capture/images/image" + datetime.datetime.now().strftime('%a%d%b%Y,%I:%M%p') + ".jpg"
-)
+        self.picam2.switch_mode_and_capture_file(self.still_config, "capture/images/image" + datetime.datetime.now().strftime('%a%d%b%Y,%I:%M%p') + ".jpg")
 
     def record_video(self, duration):
+        if self.RECORDING_VIDEO:
+            return
         if self.picam2.is_open == False:
             return
         # ------
@@ -61,8 +65,10 @@ class Camera:
         # ------------------
         self.picam2.start_recording(self.h264encoder, "capture/videos/record" + datetime.datetime.now().strftime('%a%d%b%Y,%I:%M%p') + ".h264", quality=Quality.HIGH)
         time.sleep(duration)
+        self.RECORDING_VIDEO = True
         # ------------------
         self.picam2.stop_recording()
+        self.RECORDING_VIDEO = False
         #self.picam2.stop_preview()
         # ------
         self.picam2.switch_mode(self.preview_config)
