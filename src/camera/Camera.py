@@ -41,10 +41,11 @@ class Camera:
             self.picam2.switch_mode(self.preview_config)
         self.picam2.start_preview(Preview.DRM, x=0, y=-int((resolution[0]*0.75-resolution[1])/2), width=resolution[0], height=int(resolution[0]*0.75))
         self.picam2.start()
-
+        self.PREVIEWING = True
 
     def stop_preview(self):
         self.picam2.stop_preview()
+        self.PREVIEWING = False
 
     def capture_image_preview(self):
         # fileName = "capture/images/image" + datetime.datetime.now().ptrftime('%a%d%b%Y,%I:%M%p') + ".jpg"

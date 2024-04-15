@@ -14,25 +14,25 @@ class PVCore(object):
         ## OLED display #
         ## TOF sensors #
         ## I2C controller
-        self.mode = 0
+        self.MODE = 0
         self.button_handlers = [
             ButtonHandler(id, pin, self.button_press_callback)
             for id, pin in BUTTONS_PINS
         ]
         self.i2c_controller = I2CController(0x40)
         # send mode to I2C controller
-        self.i2c_controller.send_byte(self.mode)
+        self.i2c_controller.send_byte(self.MODE)
         # start the camera
         self.picam = Camera()
         self.picam.start_preview()
 
     def loop(self):
         # if in active mode
-        if self.mode == 0:
+        if self.MODE == 0:
             # TODO: read from the matrices, update the OLED display
             pass
         # if in passive mode
-        elif self.mode == 1:
+        elif self.MODE == 1:
             # Do nothing, for now, TODO: redesign
             pass
 
@@ -52,9 +52,9 @@ class PVCore(object):
             # if duration is more than 2 second, long press process
             if button_id == BUTTONS_PINS.keys()[0]:
                 # toggle self mode
-                self.mode_change((self.mode + 1) % 2)
+                self.mode_change((self.MODE + 1) % 2)
             elif button_id == BUTTONS_PINS.keys()[1]:
-                self.capture_video()
+                self.capture_video(CAPTURE_DUR)
             elif button_id == BUTTONS_PINS.keys()[2]:
                 # reset the program
                 self.resets()
@@ -67,7 +67,20 @@ class PVCore(object):
         # try sending mode to I2C controller
         try:
             self.i2c_controller.send_byte(mode)
-            self.mode = mode
+            if mode == 0:
+                print("Active Mode\n")
+                # set preview ON
+                self.picam.start_preview()
+                # set TOFs & OLED Screen ON
+                # set recognition OFF
+            else:
+                # set preview OFF
+                self.picam.stop_preview()
+                # TODO: set mode to recording mode ???? start recognition under mode
+
+                # set TOFs & OLED Screen OFF
+                # set recognition ON
+            self.MODE = mode
         except:
             print("Failed to send mode to I2C controller\n")
 
@@ -79,9 +92,15 @@ class PVCore(object):
         print("Video captured\n")
         self.picam.record_video(RECORD_DUR)
 
+
+
+
+
+
     # for CTRL+C handling
     def signal_handler(self, signal_received, frame):
         self.halt()
+    
     # reset of program
     def resets(self):
         # send reset signal to I2C controller
