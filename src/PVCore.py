@@ -27,6 +27,9 @@ class PVCore(object):
         self.picam = Camera()
         self.picam.start_preview()
 
+        
+        self.i2c_controller.send_byte(self.MODE)
+
     def loop(self):
         # if in active mode
         if self.MODE == 0:
