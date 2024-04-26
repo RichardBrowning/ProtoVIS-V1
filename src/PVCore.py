@@ -1,5 +1,5 @@
 from config import BUTTONS, RECORD_DUR
-from pyRTOS import Task, Timer
+from pyRTOS import Task
 
 import time
 from camera.Camera import Camera
