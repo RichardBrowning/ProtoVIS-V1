@@ -10,10 +10,11 @@ from exceptions.ExceptionsSet import TerminateException, ResetCoreException
 class PVCore(object):
     def __init__(self, ):
         ## picamera2 #
-        ## 4-Buttons set #
         ## OLED display #
         ## TOF sensors #
         ## I2C controller
+        self.i2cController = I2CController(address=0x24);
+        ## 4-Buttons set #
         self.MODE = 0
         self.button_handlers = [
             ButtonHandler(id, pin, self.button_press_callback)
