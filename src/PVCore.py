@@ -1,4 +1,4 @@
-from config import BUTTONS_PINS, RECORD_DUR
+from config import BUTTONS, RECORD_DUR
 from pyRTOS import Task, Timer
 
 import time
@@ -18,7 +18,7 @@ class PVCore(object):
         self.MODE = 0
         self.button_handlers = [
             ButtonHandler(id, pin, self.button_press_callback)
-            for id, pin in BUTTONS_PINS
+            for id, pin in BUTTONS
         ]
         self.i2c_controller = I2CController(0x40)
         # send mode to I2C controller
@@ -27,7 +27,7 @@ class PVCore(object):
         self.picam = Camera()
         self.picam.start_preview()
 
-        
+
         self.i2c_controller.send_byte(self.MODE)
 
     def loop(self):
@@ -43,26 +43,26 @@ class PVCore(object):
     def button_press_callback(self, button_id, duration):
         # if duration is less than 2 second, short press process
         if duration < 2:
-            if button_id == BUTTONS_PINS.keys()[0]:
+            if button_id == BUTTONS.keys()[0]:
                 pass
-            elif button_id == BUTTONS_PINS.keys()[1]:
+            elif button_id == BUTTONS.keys()[1]:
                 # capture image
                 self.capture_image()
-            elif button_id == BUTTONS_PINS.keys()[2]:
+            elif button_id == BUTTONS.keys()[2]:
                 pass
-            elif button_id == BUTTONS_PINS.keys()[3]:
+            elif button_id == BUTTONS.keys()[3]:
                 pass
         else:
             # if duration is more than 2 second, long press process
-            if button_id == BUTTONS_PINS.keys()[0]:
+            if button_id == BUTTONS.keys()[0]:
                 # toggle self mode
                 self.mode_change((self.MODE + 1) % 2)
-            elif button_id == BUTTONS_PINS.keys()[1]:
-                self.capture_video(CAPTURE_DUR)
-            elif button_id == BUTTONS_PINS.keys()[2]:
+            elif button_id == BUTTONS.keys()[1]:
+                self.capture_video(RECORD_DUR)
+            elif button_id == BUTTONS.keys()[2]:
                 # reset the program
                 self.resets()
-            elif button_id == BUTTONS_PINS.keys()[3]:
+            elif button_id == BUTTONS.keys()[3]:
                 # halt the program
                 self.halt()
         
