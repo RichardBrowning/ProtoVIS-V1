@@ -20,7 +20,7 @@ class PVCore(object):
             ButtonHandler(BUTTON_FUNCS[i], BUTTON_PINS[i], self.button_press_callback)
             for i in range(0, 4)
         ]
-        self.i2c_controller = I2CController(0x24)
+        self.i2c_controller = I2CController()
         # send mode to I2C controller
         self.i2c_controller.send_byte(self.MODE, SLAVE_ADDR)
         # start the camera
