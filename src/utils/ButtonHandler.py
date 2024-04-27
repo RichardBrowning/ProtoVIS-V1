@@ -25,6 +25,8 @@ class ButtonHandler:
         self.button_released_time = time.time()
         # Calculate the duration of the button press
         duration = self.button_released_time - self.button_pressed_time
+        # Test output
+        print(f"Button {self.id} pressed for {duration} seconds")
         # Call the handler callback function
-        self.handler_callback(self.id, duration)
+        # self.handler_callback(self.id, duration)
 

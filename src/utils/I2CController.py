@@ -6,6 +6,6 @@ class I2CController:
         self.address = address
         self.bus = smbus.SMBus(bus_number)
 
-    def send_byte(self, data):
-        self.bus.write_byte(self.address, data)
-        print(f"Sent {data} to I2C address {self.address}")
+    def send_byte(self, data, address):
+        self.bus.write_byte(address, data)
+        print(f"Sent {data} to {address}")

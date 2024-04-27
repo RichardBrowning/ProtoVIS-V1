@@ -1,4 +1,4 @@
-from config import BUTTON_PINS, BUTTON_FUNCS, RECORD_DUR
+from config import BUTTON_PINS, BUTTON_FUNCS, RECORD_DUR, SLAVE_ADDR
 from pyRTOS import Task
 
 import time
@@ -27,8 +27,7 @@ class PVCore(object):
         self.picam = Camera()
         self.picam.start_preview()
 
-
-        self.i2c_controller.send_byte(self.MODE)
+        self.i2c_controller.send_byte(self.MODE, SLAVE_ADDR)
 
     def loop(self):
         # if in active mode
