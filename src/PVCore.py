@@ -22,12 +22,12 @@ class PVCore(object):
         ]
         self.i2c_controller = I2CController(0x40)
         # send mode to I2C controller
-        self.i2c_controller.send_byte(self.MODE)
+        self.i2c_controller.send_byte(self.MODE, SLAVE_ADDR)
         # start the camera
         self.picam = Camera()
         self.picam.start_preview()
 
-        self.i2c_controller.send_byte(self.MODE, SLAVE_ADDR)
+
 
     def loop(self):
         # if in active mode
