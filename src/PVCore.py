@@ -8,19 +8,19 @@ from utils.ButtonHandler import ButtonHandler
 from exceptions.ExceptionsSet import TerminateException, ResetCoreException
 
 class PVCore(object):
-    def __init__(self, ):
+    def __init__(self):
         ## picamera2 #
         ## OLED display #
         ## TOF sensors #
         ## I2C controller
-        self.i2cController = I2CController();
+        self.i2c_controller = I2CController()
+
         ## 4-Buttons set #
         self.MODE = 0
         self.button_handlers = [
             ButtonHandler(BUTTON_FUNCS[i], BUTTON_PINS[i], self.button_press_callback)
             for i in range(0, 4)
         ]
-        self.i2c_controller = I2CController()
         # send mode to I2C controller
         self.i2c_controller.send_byte(self.MODE, SLAVE_ADDR)
         # start the camera
@@ -102,6 +102,7 @@ class PVCore(object):
 
     # for CTRL+C handling
     def signal_handler(self, signal_received, frame):
+        self.i2c_controller.send_byte(5, SLAVE_ADDR)
         self.halt()
     
     # reset of program
