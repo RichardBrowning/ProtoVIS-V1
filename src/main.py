@@ -16,6 +16,7 @@ def main():
             continue
         except KeyboardInterrupt:
             core.i2c_controller.send_byte(5, SLAVE_ADDR)
+            exit(0)
     '''
     #print('hello world')
     camera = Camera()
