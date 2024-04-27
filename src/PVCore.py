@@ -101,9 +101,9 @@ class PVCore(object):
 
 
     # for CTRL+C handling
-    def signal_handler(self, signal_received, frame):
-        self.i2c_controller.send_byte(5, SLAVE_ADDR)
-        self.halt()
+    # def signal_handler(self, signal_received, frame):
+    #     self.i2c_controller.send_byte(5, SLAVE_ADDR)
+    #     self.halt()
     
     # reset of program
     def resets(self):

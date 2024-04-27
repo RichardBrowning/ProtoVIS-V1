@@ -1,6 +1,6 @@
 from PVCore import PVCore
 from exceptions.ExceptionsSet import TerminateException, ResetCoreException
-
+from config import SLAVE_ADDR
 
 def main():
     core = PVCore()
@@ -14,6 +14,8 @@ def main():
         except ResetCoreException:
             # reset flag reached
             continue
+        except KeyboardInterrupt:
+            core.i2c_controller.send_byte(5, SLAVE_ADDR)
     '''
     #print('hello world')
     camera = Camera()
