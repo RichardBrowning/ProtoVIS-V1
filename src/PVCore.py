@@ -13,14 +13,14 @@ class PVCore(object):
         ## OLED display #
         ## TOF sensors #
         ## I2C controller
-        self.i2cController = I2CController(address=0x24);
+        self.i2cController = I2CController();
         ## 4-Buttons set #
         self.MODE = 0
         self.button_handlers = [
             ButtonHandler(BUTTON_FUNCS[i], BUTTON_PINS[i], self.button_press_callback)
             for i in range(0, 4)
         ]
-        self.i2c_controller = I2CController(0x40)
+        self.i2c_controller = I2CController(0x24)
         # send mode to I2C controller
         self.i2c_controller.send_byte(self.MODE, SLAVE_ADDR)
         # start the camera
