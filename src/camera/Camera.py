@@ -51,7 +51,7 @@ class Camera:
         self.PREVIEWING = True
 
     def hide_preview(self):
-        self.picam2.start_preview(Preview.NULL)
+        self.picam2.stop_preview()
         self.PREVIEWING = False
 
     def capture_image_preview(self):
