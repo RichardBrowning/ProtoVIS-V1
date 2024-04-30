@@ -119,4 +119,4 @@ class PVCore(object):
     def halt(self):
         # send halt signal to I2C controller
         print("Program Halt\n")
-        raise KeyboardInterrupt
+        raise TerminateException
