@@ -42,23 +42,26 @@ class PVCore(object):
     def button_press_callback(self, button_id, duration):
         # if duration is less than 2 second, short press process
         if duration < 2:
-            if button_id == BUTTON_PINS[0]:
+            if button_id == BUTTON_FUNCS[0]:
                 # Short press does not change mode
+                print("Long press to change mode\n")
                 pass
-            elif button_id == BUTTON_PINS[1]:
+            elif button_id == BUTTON_FUNCS[1]:
                 # Short press capture image
                 self.capture_image()
-            elif button_id == BUTTON_PINS[2]:
+                print("Captured Image")
+            elif button_id == BUTTON_FUNCS[2]:
                 # Short press does not halt
+                print("Long press to halt")
                 pass
         else:
             # if duration is more than 2 second, long press process
-            if button_id == BUTTON_PINS[0]:
+            if button_id == BUTTON_FUNCS[0]:
                 # toggle self mode
                 self.mode_change((self.MODE + 1) % 2)
-            elif button_id == BUTTON_PINS[1]:
+            elif button_id == BUTTON_FUNCS[1]:
                 self.capture_video(RECORD_DUR)
-            elif button_id == BUTTON_PINS[2]:
+            elif button_id == BUTTON_FUNCS[2]:
                 # halt the program
                 self.halt()
                 
