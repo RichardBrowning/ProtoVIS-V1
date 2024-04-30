@@ -11,10 +11,10 @@ def main():
         except TerminateException:
             # terminate flag reached
             core.i2c_controller.send_byte(5, SLAVE_ADDR)
-            exit(0)
+            break
         except KeyboardInterrupt:
             core.i2c_controller.send_byte(5, SLAVE_ADDR)
-            exit(0)
+            break
     '''
     #print('hello world')
     camera = Camera()

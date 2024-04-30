@@ -56,8 +56,8 @@ class Camera:
 
     def capture_image_preview(self):
         # fileName = "capture/images/image" + datetime.datetime.now().ptrftime('%a%d%b%Y,%I:%M%p') + ".jpg"
-        # self.picam2.switch_mode_and_capture_file(self.still_config, "capture/images/image" + datetime.datetime.now().strftime('%a%d%b%Y,%I:%M%p') + ".jpg")
-        self.picam2.switch_mode_and_capture_file(self.still_config, "image.jpg")
+        self.picam2.switch_mode_and_capture_file(self.still_config, "./capture/images/image" + datetime.datetime.now().strftime('%a%d%b%Y,%I:%M%p') + ".jpg")
+        # self.picam2.switch_mode_and_capture_file(self.still_config, datetime.datetime.now().strftime('%a%d%b%Y,%I:%M%p') + ".jpg")
     def record_video(self, duration):
         if self.RECORDING_VIDEO:
             return
