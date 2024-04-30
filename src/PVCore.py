@@ -71,7 +71,7 @@ class PVCore(object):
         print("changed mode\n")
         # try sending mode to I2C controller
         try:
-            self.i2c_controller.send_byte(mode)
+            self.i2c_controller.send_byte(mode, SLAVE_ADDR)
             if mode == 0:
                 print("Active Mode\n")
                 # set preview ON
