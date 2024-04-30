@@ -91,12 +91,13 @@ class PVCore(object):
             print("Failed to send mode to I2C controller\n")
 
     def capture_image(self):
+        if self.picam.PREVIEWING:
+            self.picam.capture_image_preview()
         print("Image captured\n")
-        self.picam.capture_image_preview()
 
-    def capture_video(self):
+    def capture_video(self, record_dur):
         print("Video captured\n")
-        self.picam.record_video(RECORD_DUR)
+        self.picam.record_video(record_dur)
 
 
 
