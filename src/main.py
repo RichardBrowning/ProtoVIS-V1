@@ -8,10 +8,10 @@ def main():
         try:
             # trap function
             core.loop()
-        except TerminateException:
-            # terminate flag reached
-            core.i2c_controller.send_byte(5, SLAVE_ADDR)
-            break
+        # except TerminateException:
+        #     # terminate flag reached
+        #     core.i2c_controller.send_byte(5, SLAVE_ADDR)
+        #     break
         except KeyboardInterrupt:
             core.i2c_controller.send_byte(5, SLAVE_ADDR)
             break
