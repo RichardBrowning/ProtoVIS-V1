@@ -58,7 +58,10 @@ class PVCore(object):
             # if duration is more than 2 second, long press process
             if button_id == BUTTON_FUNCS[0]:
                 # toggle self mode
-                self.mode_change((self.MODE + 1) % 2)
+                if self.MODE == 0:
+                    self.mode_change(1)
+                else:
+                    self.mode_change(0)
             elif button_id == BUTTON_FUNCS[1]:
                 self.capture_video(RECORD_DUR)
             elif button_id == BUTTON_FUNCS[2]:
