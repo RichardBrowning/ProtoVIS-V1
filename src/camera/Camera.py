@@ -32,6 +32,7 @@ class Camera:
     def __enter__(self):
         return self
     def __exit__(self):
+        self.end_picam()
         self.close()
     
     def start_preview(self, resolution = (800, 480)):
@@ -96,7 +97,7 @@ class Camera:
 
     
     def end_picam(self):
-        self.picam2.start()
+        self.picam2.stop()
     
     def start_picam(self):
-        self.picam2.stop()
+        self.picam2.start()

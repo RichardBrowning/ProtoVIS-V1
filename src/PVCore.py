@@ -19,7 +19,7 @@ class PVCore(object):
         self.MODE = 0
         self.button_handlers = [
             ButtonHandler(BUTTON_FUNCS[i], BUTTON_PINS[i], self.button_press_callback)
-            for i in range(0, 4)
+            for i in range(0, BUTTON_PINS.__len__() )
         ]
         # send mode to I2C controller
         self.i2c_controller.send_byte(self.MODE, SLAVE_ADDR)
@@ -43,13 +43,13 @@ class PVCore(object):
         # if duration is less than 2 second, short press process
         if duration < 2:
             if button_id == BUTTON_PINS[0]:
+                # Short press does not change mode
                 pass
             elif button_id == BUTTON_PINS[1]:
-                # capture image
+                # Short press capture image
                 self.capture_image()
             elif button_id == BUTTON_PINS[2]:
-                pass
-            elif button_id == BUTTON_PINS[3]:
+                # Short press does not halt
                 pass
         else:
             # if duration is more than 2 second, long press process
@@ -59,11 +59,10 @@ class PVCore(object):
             elif button_id == BUTTON_PINS[1]:
                 self.capture_video(RECORD_DUR)
             elif button_id == BUTTON_PINS[2]:
-                # reset the program
-                self.resets()
-            elif button_id == BUTTON_PINS[3]:
                 # halt the program
                 self.halt()
+                
+
         
     def mode_change(self, mode):
         print("changed mode\n")
@@ -106,10 +105,11 @@ class PVCore(object):
     #     self.halt()
     
     # reset of program
-    def resets(self):
-        # send reset signal to I2C controller
-        print("Reset\n")
-        raise ResetCoreException
+    # def resets(self):
+    #     # send reset signal to I2C controller
+    #     print("Reset\n")
+    #     raise ResetCoreException
+
     # halt of program
     def halt(self):
         # send halt signal to I2C controller

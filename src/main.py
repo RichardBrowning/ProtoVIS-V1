@@ -1,5 +1,5 @@
 from PVCore import PVCore
-from exceptions.ExceptionsSet import TerminateException, ResetCoreException
+from exceptions.ExceptionsSet import TerminateException
 from config import SLAVE_ADDR
 
 def main():
@@ -10,10 +10,8 @@ def main():
             core.loop()
         except TerminateException:
             # terminate flag reached
-            break
-        except ResetCoreException:
-            # reset flag reached
-            continue
+            core.i2c_controller.send_byte(5, SLAVE_ADDR)
+            exit(0)
         except KeyboardInterrupt:
             core.i2c_controller.send_byte(5, SLAVE_ADDR)
             exit(0)

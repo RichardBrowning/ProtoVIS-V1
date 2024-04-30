@@ -28,5 +28,5 @@ class ButtonHandler:
         # Test output
         print(f"Button {self.id} pressed for {duration} seconds")
         # Call the handler callback function
-        # self.handler_callback(self.id, duration)
+        self.handler_callback(self.id, duration)
 
