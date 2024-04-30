@@ -44,8 +44,14 @@ class Camera:
         self.picam2.start()
         self.PREVIEWING = True
 
-    def stop_preview(self):
-        self.picam2.stop_preview()
+    def resume_preview(self, resolution = (800, 480)):
+        if self.PREVIEWING:
+            return
+        self.picam2.start_preview(Preview.DRM, x=0, y=-int((resolution[0]*0.75-resolution[1])/2), width=resolution[0], height=int(resolution[0]*0.75))
+        self.PREVIEWING = True
+
+    def hide_preview(self):
+        self.picam2.start_preview(Preview.NULL)
         self.PREVIEWING = False
 
     def capture_image_preview(self):

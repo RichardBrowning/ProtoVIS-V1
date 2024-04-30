@@ -77,12 +77,12 @@ class PVCore(object):
             self.i2c_controller.send_byte(mode, SLAVE_ADDR)
             if mode == 0:
                 # set preview ON
-                self.picam.start_preview()
+                self.picam.resume_preview()
                 # set TOFs & OLED Screen ON
                 # set recognition OFF
             else:
                 # set preview OFF
-                self.picam.stop_preview()
+                self.picam.hide_preview()
                 # TODO: set mode to recording mode ???? start recognition under mode
                 # set TOFs & OLED Screen OFF
                 # set recognition ON

@@ -45,6 +45,5 @@ class UsbCamera():
         # ------------------
         self.picam2.stop_recording()
         self.RECORDING_VIDEO = False
-        #self.picam2.stop_preview()
         # ------
         self.picam2.switch_mode(self.preview_config)
