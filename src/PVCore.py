@@ -71,12 +71,11 @@ class PVCore(object):
 
         
     def mode_change(self, mode):
-        print("changed mode\n")
+        print("Changed Mode\n")
         # try sending mode to I2C controller
         try:
             self.i2c_controller.send_byte(mode, SLAVE_ADDR)
             if mode == 0:
-                print("Active Mode\n")
                 # set preview ON
                 self.picam.start_preview()
                 # set TOFs & OLED Screen ON
@@ -85,7 +84,6 @@ class PVCore(object):
                 # set preview OFF
                 self.picam.stop_preview()
                 # TODO: set mode to recording mode ???? start recognition under mode
-
                 # set TOFs & OLED Screen OFF
                 # set recognition ON
             self.MODE = mode
