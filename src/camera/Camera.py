@@ -71,12 +71,13 @@ class Camera:
             self.picam2.switch_mode(self.recording_config)
         #self.picam2.start_preview()
         # ------------------
-        self.picam2.start_recording(self.h264encoder, "capture/videos/record" + datetime.datetime.now().strftime('%a%d%b%Y,%I:%M%p') + ".h264", quality=Quality.HIGH)
+        self.picam2.start_recording(self.h264encoder, "./capture/videos/record" + datetime.datetime.now().strftime('%a%d%b%Y,%I:%M%p') + ".h264", quality=Quality.HIGH)
         time.sleep(duration)
         self.RECORDING_VIDEO = True
         # ------------------
         self.picam2.stop_recording()
         self.RECORDING_VIDEO = False
+        print("Video done recording")
         #self.picam2.stop_preview()
         # ------
         self.picam2.switch_mode(self.preview_config)
